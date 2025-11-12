@@ -1,2 +1,2 @@
 # vehicle_rental_system
-https://github.com/users/mustafayasinsevinc-hub/projects/2
+A Python-based terminal application to manage vehicle inventory, customer reservations, and rental agreements for a local rental agency.
