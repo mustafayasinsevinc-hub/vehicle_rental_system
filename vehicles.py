@@ -1,62 +1,41 @@
 import json
-import os
-
-
-def load_vehicles(path: str) -> list:
-    if not os.path.exists(path):
+def load_vehicles(path):
+    try:
+        with open(path,'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
         return []
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_vehicles(path: str, vehicles: list) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(vehicles, f, indent=4)
-
-
-def add_vehicle(vehicles: list, vehicle_data: dict) -> dict:
-    for v in vehicles:
-        if v["id"] == vehicle_data["id"]:
-            raise ValueError("This ID has been using already.")
-
+def save_vehicles(path,vehicles):
+    with open(path,'w') as f:
+        json.dump(vehicles,f,indent=4)
+def add_vehicle(vehicles,vehicle_data):
     vehicles.append(vehicle_data)
     return vehicle_data
-
-
-def update_vehicle(vehicles: list, vehicle_id: str, updates: dict) -> dict:
-    for v in vehicles:
-        if v["id"] == vehicle_id:
-            v.update(updates)
-            return v
-    raise ValueError("Vehicle doesn't found.")
-
-
-def set_vehicle_status(vehicles: list, vehicle_id: str, status: str) -> dict:
-    allowed = ["available", "maintenance", "rented"]
-    if status not in allowed:
-        raise ValueError("Invalid status.")
-
-    for v in vehicles:
-        if v["id"] == vehicle_id:
-            v["status"] = status
-            return v
-
-    raise ValueError("Vehicle doesn't found.")
-
-
-def list_available_vehicles(
-    vehicles: list,
-    rental_dates: tuple[str, str],
-    vehicle_type: str | None = None
-) -> list:
-    result = []
-
-    for v in vehicles:
-        if v["status"] != "available":
+def update_vehicle(vehicles,vehicle_id,updates):
+    for vehicle in vehicles:
+        if vehicle["id"]==vehicle_id:
+            vehicle.update(updates)
+            return vehicle
+    return {}
+def set_vehicle_status(vehicles,vehicle_id,status):
+    for vehicle in vehicles:
+        if vehicle["id"]==vehicle_id:
+            vehicle["status"]=status
+            return vehicle
+    return {}
+def list_available_vehicles(vehicles,rental_dates,reservations):
+    available=[]
+    start_req=rental_dates[0]
+    end_req=rental_dates[1]
+    for vehicle in vehicles:
+        if vehicle["status"]!="available":
             continue
-        if vehicle_type and v["type"] != vehicle_type:
-            continue
-        result.append(v)
-
-    return result
+        is_booked=False
+        for res in reservations:
+            if res["vehicle_id"]==vehicle["id"] and res["status"]=="active":
+                if not (end_req<=res["start_date"] or start_req>=res["end_date"]):
+                    is_booked=True
+                    break
+        if not is_booked:
+            available.append(vehicle)
+    return available
